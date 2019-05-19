@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 import copy
-try:
-    from collections.abc import Mapping
-except ImportError:  # Python 3.2 or older
-    from collections import Mapping
 
 from six import iteritems
 from six import string_types
 
 from bravado_core.exception import SwaggerMappingError
 
+try:
+    from collections.abc import Mapping
+except ImportError:  # Python 3.2 or older
+    from collections import Mapping
 
 # 'object' and 'array' are omitted since this should really be read as
 # "Swagger types that map to python primitives"
@@ -186,3 +186,12 @@ def collapsed_properties(model_spec, swagger_spec):
             properties.update(more_properties)
 
     return properties
+
+
+def get_type_from_schema(swagger_spec, schema_object_spec):
+    try:
+        return schema_object_spec['type']
+    except KeyError:
+        if swagger_spec.config['default_type_to_object'] or 'allOf' in schema_object_spec:
+            return 'object'
+        return None
