@@ -13,7 +13,7 @@ from bravado_core.response import unmarshal_response
 from bravado_core.schema import collapsed_properties
 from bravado_core.schema import is_ref
 from bravado_core.spec import Spec
-from bravado_core.unmarshal import unmarshal_model
+from bravado_core.unmarshal import unmarshal_schema_object
 
 
 def test_model_properties_iteration(definitions_spec, user_type, user_kwargs):
@@ -134,10 +134,10 @@ def test_marshal_as_dict_recursive(polymorphic_spec, recursive):
             },
         ]
     }
-    pet_list = unmarshal_model(
+    pet_list = unmarshal_schema_object(
         swagger_spec=polymorphic_spec,
-        model_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
-        model_value=list_of_pets_dict,
+        schema_object_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+        value=list_of_pets_dict,
     )
 
     dictionary = pet_list._as_dict(recursive=recursive)
@@ -187,10 +187,10 @@ def test_model_as_dict_additional_property(definitions_spec, user_type, user_kwa
     )
 )
 def test_model_isinstance(polymorphic_spec, instance_dict, object_type, possible_object_types):
-    model = unmarshal_model(
+    model = unmarshal_schema_object(
         swagger_spec=polymorphic_spec,
-        model_spec=polymorphic_spec.spec_dict['definitions'][object_type],
-        model_value=instance_dict
+        schema_object_spec=polymorphic_spec.spec_dict['definitions'][object_type],
+        value=instance_dict,
     )
     assert any(
         isinstance(model, polymorphic_spec.definitions[possible_object_type])

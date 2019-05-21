@@ -3,7 +3,7 @@ import pytest
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.spec import Spec
-from bravado_core.unmarshal import unmarshal_model
+from bravado_core.unmarshal import unmarshal_schema_object
 
 
 @pytest.fixture
@@ -48,8 +48,9 @@ def test_definitions_with_ref(composition_spec, releaseDate):
     if releaseDate:
         pong_clone_dict['releaseDate'] = releaseDate
 
-    pong_clone = unmarshal_model(composition_spec, pong_clone_spec,
-                                 pong_clone_dict)
+    pong_clone = unmarshal_schema_object(
+        composition_spec, pong_clone_spec, pong_clone_dict,
+    )
 
     assert isinstance(pong_clone, PongClone)
     assert 'hello' == pong_clone.pang
@@ -73,7 +74,7 @@ def test_pet(petstore_dict, pet_dict):
     Tag = petstore_spec.definitions['Tag']
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
 
-    pet = unmarshal_model(petstore_spec, pet_spec, pet_dict)
+    pet = unmarshal_schema_object(petstore_spec, pet_spec, pet_dict)
 
     assert isinstance(pet, Pet)
     assert 1 == pet.id
@@ -105,7 +106,7 @@ def test_Nones_are_reintroduced_for_declared_properties_that_are_not_present(
     del pet_dict['status']
     del pet_dict['category']
 
-    pet = unmarshal_model(petstore_spec, pet_spec, pet_dict)
+    pet = unmarshal_schema_object(petstore_spec, pet_spec, pet_dict)
 
     assert isinstance(pet, Pet)
     assert 1 == pet.id
@@ -128,7 +129,7 @@ def test_value_is_not_dict_like_raises_error(petstore_dict):
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
 
     with pytest.raises(SwaggerMappingError) as excinfo:
-        unmarshal_model(petstore_spec, pet_spec, 'i am not a dict')
+        unmarshal_schema_object(petstore_spec, pet_spec, 'i am not a dict')
 
     assert 'Expected type to be dict' in str(excinfo.value)
 
@@ -151,7 +152,7 @@ def test_nullable_object_properties(petstore_dict, pet_dict):
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
     pet_dict['category'] = None
 
-    pet = unmarshal_model(petstore_spec, pet_spec, pet_dict)
+    pet = unmarshal_schema_object(petstore_spec, pet_spec, pet_dict)
 
     assert isinstance(pet, Pet)
     assert pet.category is None
@@ -165,7 +166,7 @@ def test_non_nullable_object_properties(petstore_dict, pet_dict):
     pet_dict['category'] = None
 
     with pytest.raises(SwaggerMappingError):
-        unmarshal_model(petstore_spec, pet_spec, pet_dict)
+        unmarshal_schema_object(petstore_spec, pet_spec, pet_dict)
 
 
 def test_nullable_array_properties(petstore_dict, pet_dict):
@@ -177,7 +178,7 @@ def test_nullable_array_properties(petstore_dict, pet_dict):
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
     pet_dict['tags'] = None
 
-    pet = unmarshal_model(petstore_spec, pet_spec, pet_dict)
+    pet = unmarshal_schema_object(petstore_spec, pet_spec, pet_dict)
 
     assert isinstance(pet, Pet)
     assert pet.tags is None
@@ -191,19 +192,15 @@ def test_non_nullable_array_properties(petstore_dict, pet_dict):
     pet_dict['tags'] = None
 
     with pytest.raises(SwaggerMappingError):
-        unmarshal_model(petstore_spec, pet_spec, pet_dict)
+        unmarshal_schema_object(petstore_spec, pet_spec, pet_dict)
 
 
-def test_unmarshal_model_with_none_model_type(petstore_spec):
+def test_unmarshal_schema_object_with_none_model_type(petstore_spec):
     model_spec = {'x-model': 'Foobar'}
-
-    with pytest.raises(SwaggerMappingError) as excinfo:
-        unmarshal_model(petstore_spec, model_spec, {})
-
-    assert 'Unknown model Foobar' in str(excinfo.value)
+    assert unmarshal_schema_object(petstore_spec, model_spec, {}) == {}
 
 
-def test_unmarshal_model_polymorphic_specs(polymorphic_spec):
+def test_unmarshal_schema_object_polymorphic_specs(polymorphic_spec):
     list_of_pets_dict = {
         'number_of_pets': 2,
         'list': [
@@ -219,10 +216,10 @@ def test_unmarshal_model_polymorphic_specs(polymorphic_spec):
             },
         ]
     }
-    pet_list = unmarshal_model(
+    pet_list = unmarshal_schema_object(
         swagger_spec=polymorphic_spec,
-        model_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
-        model_value=list_of_pets_dict,
+        schema_object_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+        value=list_of_pets_dict,
     )
 
     assert isinstance(pet_list, polymorphic_spec.definitions['PetList'])

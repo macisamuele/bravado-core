@@ -6,7 +6,7 @@ import pytest
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.spec import Spec
-from bravado_core.unmarshal import unmarshal_object
+from bravado_core.unmarshal import unmarshal_schema_object
 
 
 @pytest.fixture
@@ -124,7 +124,7 @@ def test_with_properties(empty_swagger_spec, address_spec, address, street_type,
         'street_name': u'Ümlaut',
         'street_type': expected_street_type,
     }
-    result = unmarshal_object(empty_swagger_spec, address_spec, address)
+    result = unmarshal_schema_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
 
 
@@ -135,7 +135,7 @@ def test_missing_with_default(empty_swagger_spec, address_spec, address):
         'street_name': u'Ümlaut',
         'street_type': 'Street',
     }
-    result = unmarshal_object(empty_swagger_spec, address_spec, address)
+    result = unmarshal_schema_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
 
 
@@ -157,7 +157,7 @@ def test_with_array(empty_swagger_spec, address_spec):
             'cul de sac'
         ],
     }
-    result = unmarshal_object(empty_swagger_spec, address_spec, address)
+    result = unmarshal_schema_object(empty_swagger_spec, address_spec, address)
     assert result == address
 
 
@@ -172,7 +172,7 @@ def test_with_nested_object(empty_swagger_spec, address_spec, location_spec):
             'latitude': 99.9,
         },
     }
-    result = unmarshal_object(empty_swagger_spec, address_spec, address)
+    result = unmarshal_schema_object(empty_swagger_spec, address_spec, address)
     assert result == address
 
 
@@ -189,7 +189,7 @@ def test_with_ref(minimal_swagger_dict, address_spec, location_spec):
         },
     }
     minimal_swagger_spec = Spec(minimal_swagger_dict)
-    result = unmarshal_object(minimal_swagger_spec, address_spec, address)
+    result = unmarshal_schema_object(minimal_swagger_spec, address_spec, address)
     assert result == address
 
 
@@ -210,10 +210,10 @@ def test_with_model_composition(business_address_swagger_spec, address_spec, bus
     if business_address_swagger_spec.config['include_missing_properties']:
         expected_business_address.update(floor=None, name=None)
 
-    business_address = unmarshal_object(
+    business_address = unmarshal_schema_object(
         business_address_swagger_spec, business_address_spec, business_address_dict,
     )
-    assert expected_business_address == business_address
+    assert expected_business_address == business_address._asdict()
 
 
 def test_with_model(minimal_swagger_dict, address_spec, location_spec):
@@ -257,7 +257,7 @@ def test_with_model(minimal_swagger_dict, address_spec, location_spec):
         'location': Location(longitude=100.1, latitude=99.9),
     }
 
-    address = unmarshal_object(swagger_spec, address_spec, address_dict)
+    address = unmarshal_schema_object(swagger_spec, address_spec, address_dict)
     assert expected_address == address
 
 
@@ -316,14 +316,14 @@ def test_self_property_with_model(minimal_swagger_dict):
         },
     }
 
-    self_link = unmarshal_object(self_link_swagger_spec, link_spec, self_link_dict)
+    self_link = unmarshal_schema_object(self_link_swagger_spec, link_spec, self_link_dict)
     assert self_link["_links"].self["href"] == href
 
 
 def test_object_not_dict_like_raises_error(empty_swagger_spec, address_spec):
     i_am_not_dict_like = 34
     with pytest.raises(SwaggerMappingError) as excinfo:
-        unmarshal_object(empty_swagger_spec, address_spec, i_am_not_dict_like)
+        unmarshal_schema_object(empty_swagger_spec, address_spec, i_am_not_dict_like)
     assert 'Expected type to be dict' in str(excinfo.value)
 
 
@@ -335,7 +335,7 @@ def test_mising_properties_set_to_None(
         'street_name': None,
         'street_type': 'Avenue'
     }
-    result = unmarshal_object(empty_swagger_spec, address_spec, address)
+    result = unmarshal_schema_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
 
 
@@ -349,25 +349,25 @@ def test_pass_through_additionalProperties_with_no_spec(
         'street_type': 'Avenue',
         'city': 'Swaggerville',
     }
-    result = unmarshal_object(empty_swagger_spec, address_spec, address)
+    result = unmarshal_schema_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
 
 
 def test_pass_through_property_with_no_spec(
         empty_swagger_spec, address_spec, address):
     del address_spec['properties']['street_name']['type']
-    result = unmarshal_object(empty_swagger_spec, address_spec, address)
+    result = unmarshal_schema_object(empty_swagger_spec, address_spec, address)
     assert result == address
 
 
 def test_pass_through_null_property_with_no_spec(empty_swagger_spec, address_spec, address):
     address['no_spec_field'] = None
-    result = unmarshal_object(empty_swagger_spec, address_spec, address)
+    result = unmarshal_schema_object(empty_swagger_spec, address_spec, address)
     assert result == address
 
 
 def test_recursive_ref_with_depth_1(recursive_swagger_spec):
-    result = unmarshal_object(
+    result = unmarshal_schema_object(
         recursive_swagger_spec,
         {'$ref': '#/definitions/Node'},
         {'name': 'foo'},
@@ -376,7 +376,7 @@ def test_recursive_ref_with_depth_1(recursive_swagger_spec):
 
 
 def test_recursive_ref_with_depth_n(recursive_swagger_spec):
-    result = unmarshal_object(
+    result = unmarshal_schema_object(
         recursive_swagger_spec,
         {'$ref': '#/definitions/Node'},
         {
@@ -433,7 +433,7 @@ def test_nullable_with_value(empty_swagger_spec, nullable, required,
     content_spec = nullable_spec_factory(required, nullable, property_type)
     obj = {'x': value}
     expected = copy.deepcopy(obj)
-    result = unmarshal_object(empty_swagger_spec, content_spec, obj)
+    result = unmarshal_schema_object(empty_swagger_spec, content_spec, obj)
     assert expected == result
 
 
@@ -444,7 +444,7 @@ def test_nullable_no_value(empty_swagger_spec, nullable, property_type):
                                          nullable=nullable,
                                          property_type=property_type)
     value = {}
-    result = unmarshal_object(empty_swagger_spec, content_spec, value)
+    result = unmarshal_schema_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}  # Missing parameters are re-introduced
 
 
@@ -455,7 +455,7 @@ def test_nullable_none_value(empty_swagger_spec, required, property_type):
                                          nullable=True,
                                          property_type=property_type)
     value = {'x': None}
-    result = unmarshal_object(empty_swagger_spec, content_spec, value)
+    result = unmarshal_schema_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}
 
 
@@ -466,7 +466,7 @@ def test_non_nullable_none_value(empty_swagger_spec, property_type):
                                          property_type=property_type)
     value = {'x': None}
     with pytest.raises(SwaggerMappingError) as excinfo:
-        unmarshal_object(empty_swagger_spec, content_spec, value)
+        unmarshal_schema_object(empty_swagger_spec, content_spec, value)
     assert 'is a required value' in str(excinfo.value)
 
 
@@ -476,11 +476,11 @@ def test_non_required_none_value(empty_swagger_spec, property_type):
         required=False, nullable=False, property_type=property_type,
     )
     value = {'x': None}
-    result = unmarshal_object(empty_swagger_spec, content_spec, value)
+    result = unmarshal_schema_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}
 
 
-def test_unmarshal_object_polymorphic_specs(polymorphic_spec):
+def test_unmarshal_schema_object_polymorphic_specs(polymorphic_spec):
     list_of_pets_dict = {
         'number_of_pets': 2,
         'list': [
@@ -497,10 +497,10 @@ def test_unmarshal_object_polymorphic_specs(polymorphic_spec):
         ]
     }
     polymorphic_spec.config['use_models'] = False
-    pet_list = unmarshal_object(
+    pet_list = unmarshal_schema_object(
         swagger_spec=polymorphic_spec,
-        object_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
-        object_value=list_of_pets_dict,
+        schema_object_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+        value=list_of_pets_dict,
     )
 
     assert pet_list == {

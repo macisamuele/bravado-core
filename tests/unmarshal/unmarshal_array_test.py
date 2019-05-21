@@ -5,7 +5,7 @@ import pytest
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.spec import Spec
-from bravado_core.unmarshal import unmarshal_array
+from bravado_core.unmarshal import unmarshal_schema_object
 
 
 @pytest.fixture
@@ -19,18 +19,18 @@ def int_array_spec():
 
 
 def test_primitive_array(empty_swagger_spec, int_array_spec):
-    result = unmarshal_array(empty_swagger_spec, int_array_spec, [1, 2, 3])
+    result = unmarshal_schema_object(empty_swagger_spec, int_array_spec, [1, 2, 3])
     assert [1, 2, 3] == result
 
 
 def test_empty_array(empty_swagger_spec, int_array_spec):
-    result = unmarshal_array(empty_swagger_spec, int_array_spec, [])
+    result = unmarshal_schema_object(empty_swagger_spec, int_array_spec, [])
     assert [] == result
 
 
 def test_type_not_array_raises_error(empty_swagger_spec, int_array_spec):
     with pytest.raises(SwaggerMappingError) as excinfo:
-        unmarshal_array(empty_swagger_spec, int_array_spec, 'not a list')
+        unmarshal_schema_object(empty_swagger_spec, int_array_spec, 'not a list')
     assert 'Expected list like type' in str(excinfo.value)
 
 
@@ -50,7 +50,7 @@ def test_array_of_array(empty_swagger_spec):
         ['four', 'five', 'six']
     ]
     expected = copy.deepcopy(input)
-    result = unmarshal_array(empty_swagger_spec, array_of_array_spec, input)
+    result = unmarshal_schema_object(empty_swagger_spec, array_of_array_spec, input)
     assert expected == result
 
 
@@ -94,7 +94,7 @@ def test_array_of_objects(empty_swagger_spec):
         },
     ]
     expected = copy.deepcopy(input)
-    result = unmarshal_array(empty_swagger_spec, array_of_addresses_spec, input)
+    result = unmarshal_schema_object(empty_swagger_spec, array_of_addresses_spec, input)
     assert expected == result
 
 
@@ -131,7 +131,7 @@ def test_array_of_models(petstore_dict):
     }
 
     pet_dicts = [fido_dict]
-    pets = unmarshal_array(petstore_spec, array_of_pets_spec, pet_dicts)
+    pets = unmarshal_schema_object(petstore_spec, array_of_pets_spec, pet_dicts)
     assert isinstance(pets, list)
     assert 1 == len(pets)
     fido = pets[0]

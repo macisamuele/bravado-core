@@ -3,36 +3,36 @@ import pytest
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.spec import Spec
-from bravado_core.unmarshal import unmarshal_primitive
+from bravado_core.unmarshal import unmarshal_schema_object
 
 
 def test_integer(minimal_swagger_spec):
     integer_spec = {'type': 'integer'}
-    assert 10 == unmarshal_primitive(minimal_swagger_spec, integer_spec, 10)
+    assert 10 == unmarshal_schema_object(minimal_swagger_spec, integer_spec, 10)
 
 
 def test_string(minimal_swagger_spec):
     string_spec = {'type': 'string'}
-    assert 'foo' == unmarshal_primitive(
+    assert 'foo' == unmarshal_schema_object(
         minimal_swagger_spec, string_spec, 'foo')
-    assert u'Ümlaut' == unmarshal_primitive(
+    assert u'Ümlaut' == unmarshal_schema_object(
         minimal_swagger_spec, string_spec, u'Ümlaut')
 
 
 def test_boolean(minimal_swagger_spec):
     boolean_spec = {'type': 'boolean'}
-    result = unmarshal_primitive(minimal_swagger_spec, boolean_spec, True)
+    result = unmarshal_schema_object(minimal_swagger_spec, boolean_spec, True)
     assert isinstance(result, bool)
     assert result
 
-    result = unmarshal_primitive(minimal_swagger_spec, boolean_spec, False)
+    result = unmarshal_schema_object(minimal_swagger_spec, boolean_spec, False)
     assert isinstance(result, bool)
     assert not result
 
 
 def test_number(minimal_swagger_spec):
     number_spec = {'type': 'number'}
-    assert 3.1 == unmarshal_primitive(minimal_swagger_spec, number_spec, 3.1)
+    assert 3.1 == unmarshal_schema_object(minimal_swagger_spec, number_spec, 3.1)
 
 
 def test_datetime_string(minimal_swagger_spec):
@@ -45,8 +45,9 @@ def test_datetime_string(minimal_swagger_spec):
     # this just tests that naive date parsing happens as expected
     input_date = "2016-06-07T20:59:00.480"
     expected_date = datetime(2016, 6, 7, 20, 59, 0, 480000)
-    assert expected_date == unmarshal_primitive(minimal_swagger_spec,
-                                                date_spec, input_date)
+    assert expected_date == unmarshal_schema_object(
+        minimal_swagger_spec, date_spec, input_date,
+    )
 
 
 def test_required_success(minimal_swagger_spec):
@@ -54,7 +55,7 @@ def test_required_success(minimal_swagger_spec):
         'type': 'integer',
         'required': True,
     }
-    assert 10 == unmarshal_primitive(minimal_swagger_spec, integer_spec, 10)
+    assert 10 == unmarshal_schema_object(minimal_swagger_spec, integer_spec, 10)
 
 
 def test_required_failure(minimal_swagger_spec):
@@ -63,7 +64,7 @@ def test_required_failure(minimal_swagger_spec):
         'required': True,
     }
     with pytest.raises(SwaggerMappingError) as excinfo:
-        unmarshal_primitive(minimal_swagger_spec, integer_spec, None)
+        unmarshal_schema_object(minimal_swagger_spec, integer_spec, None)
     assert 'is a required value' in str(excinfo.value)
 
 
@@ -73,14 +74,14 @@ def test_default(minimal_swagger_spec):
         'default': 42,
     }
 
-    assert 42 == unmarshal_primitive(minimal_swagger_spec, integer_spec, None)
+    assert 42 == unmarshal_schema_object(minimal_swagger_spec, integer_spec, None)
 
 
 def test_ref(minimal_swagger_dict):
     minimal_swagger_dict['definitions']['SpecialInteger'] = {'type': 'integer'}
     special_integer_spec = {'$ref': '#/definitions/SpecialInteger'}
     swagger_spec = Spec.from_dict(minimal_swagger_dict)
-    assert 10 == unmarshal_primitive(swagger_spec, special_integer_spec, 10)
+    assert 10 == unmarshal_schema_object(swagger_spec, special_integer_spec, 10)
 
 
 @pytest.mark.parametrize(['nullable', 'value'],
@@ -90,5 +91,5 @@ def test_nullable(minimal_swagger_spec, value, nullable):
         'type': 'string',
         'x-nullable': nullable,
     }
-    result = unmarshal_primitive(minimal_swagger_spec, string_spec, value)
+    result = unmarshal_schema_object(minimal_swagger_spec, string_spec, value)
     assert value == result

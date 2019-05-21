@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import warnings
 from functools import partial
 
 from six import iteritems
@@ -40,85 +39,6 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     unmarshaling_method = get_unmarshaling_method(swagger_spec, schema_object_spec)
     return unmarshaling_method(value)
-
-
-def unmarshal_primitive(swagger_spec, primitive_spec, value):
-    """Unmarshal a jsonschema primitive type into a python primitive.
-
-    :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type primitive_spec: dict
-    :type value: int, long, float, boolean, string, unicode, etc
-
-    :rtype: int, long, float, boolean, string, unicode, or an object
-        based on 'format'
-    :raises: SwaggerMappingError
-    """
-    warnings.warn(
-        'unmarshal_primitive will be deprecated in the next major release. '
-        'Please use the more general entry-point offered in unmarshal_schema_object',
-        DeprecationWarning,
-    )
-    null_decorator = _handle_null_value_decorator.decorator(swagger_spec, primitive_spec)
-    unmarshal_function = _unmarshaling_method_primitive_type(swagger_spec, primitive_spec)
-    return null_decorator(unmarshal_function)(value)
-
-
-def unmarshal_array(swagger_spec, array_spec, array_value):
-    """Unmarshal a jsonschema type of 'array' into a python list.
-
-    :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type array_spec: dict
-    :type array_value: list
-    :rtype: list
-    :raises: SwaggerMappingError
-    """
-    warnings.warn(
-        'unmarshal_array will be deprecated in the next major release. '
-        'Please use the more general entry-point offered in unmarshal_schema_object',
-        DeprecationWarning,
-    )
-    null_decorator = _handle_null_value_decorator.decorator(swagger_spec, array_spec)
-    unmarshal_function = _unmarshaling_method_array(swagger_spec, array_spec)
-    return null_decorator(unmarshal_function)(array_value)
-
-
-def unmarshal_object(swagger_spec, object_spec, object_value):
-    """Unmarshal a jsonschema type of 'object' into a python dict.
-
-    :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type object_spec: dict
-    :type object_value: dict
-    :rtype: dict
-    :raises: SwaggerMappingError
-    """
-    warnings.warn(
-        'unmarshal_object will be deprecated in the next major release. '
-        'Please use the more general entry-point offered in unmarshal_schema_object',
-        DeprecationWarning,
-    )
-    null_decorator = _handle_null_value_decorator.decorator(swagger_spec, object_spec)
-    unmarshal_function = _unmarshaling_method_object(swagger_spec, object_spec, use_models=False)
-    return null_decorator(unmarshal_function)(object_value)
-
-
-def unmarshal_model(swagger_spec, model_spec, model_value):
-    """Unmarshal a dict into a Model instance.
-
-    :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type model_spec: dict
-    :type model_value: dict
-    :rtype: Model instance
-    :raises: SwaggerMappingError
-    """
-    warnings.warn(
-        'unmarshal_model will be deprecated in the next major release. '
-        'Please use the more general entry-point offered in unmarshal_schema_object',
-        DeprecationWarning,
-    )
-
-    null_decorator = _handle_null_value_decorator.decorator(swagger_spec, model_spec)
-    unmarshal_function = _unmarshaling_method_object(swagger_spec, model_spec, use_models=True)
-    return null_decorator(unmarshal_function)(model_value)
 
 
 class _handle_null_value_decorator(object):
@@ -287,17 +207,12 @@ def _unmarshal_model(
     return unamarshaled_value
 
 
-def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
-    # TODO: use_models parameter should be removed once unmarshal_model function is removed
+def _unmarshaling_method_object(swagger_spec, object_schema):
     model_type = None
     object_schema = swagger_spec.deref(object_schema)
     if MODEL_MARKER in object_schema:
         model_name = object_schema[MODEL_MARKER]
         model_type = swagger_spec.definitions.get(model_name)
-        if use_models and model_type is None:
-            return partial(_raise_unknown_model, model_name)
-        if not use_models:
-            model_type = None
 
     if model_type is None:
         properties = collapsed_properties(object_schema, swagger_spec)
