@@ -47,5 +47,6 @@ setup(
     install_requires=install_requires,
     extras_require={
         ':python_version<"3.4"': ['enum34'],
+        ':python_version<"3.2"': ['functools32'],
     },
 )
