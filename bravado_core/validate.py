@@ -36,6 +36,7 @@ def scrub_sensitive_value(func):
 
 
 def validate_schema_object(swagger_spec, schema_object_spec, value):
+    # FIXME: add validation for discriminiator
     """
     :raises ValidationError: when jsonschema validation fails.
     :raises SwaggerMappingError: on invalid Swagger `type`.
