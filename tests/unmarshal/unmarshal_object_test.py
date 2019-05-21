@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
+import datetime
 
 import pytest
 
@@ -209,8 +210,9 @@ def test_with_model_composition(business_address_swagger_spec, address_spec, bus
     if business_address_swagger_spec.config['include_missing_properties']:
         expected_business_address.update(floor=None, name=None)
 
-    business_address = unmarshal_object(business_address_swagger_spec, business_address_spec,
-                                        business_address_dict)
+    business_address = unmarshal_object(
+        business_address_swagger_spec, business_address_spec, business_address_dict,
+    )
     assert expected_business_address == business_address
 
 
@@ -322,7 +324,7 @@ def test_object_not_dict_like_raises_error(empty_swagger_spec, address_spec):
     i_am_not_dict_like = 34
     with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_object(empty_swagger_spec, address_spec, i_am_not_dict_like)
-    assert 'Expected dict' in str(excinfo.value)
+    assert 'Expected type to be dict' in str(excinfo.value)
 
 
 def test_mising_properties_set_to_None(
@@ -368,36 +370,40 @@ def test_recursive_ref_with_depth_1(recursive_swagger_spec):
     result = unmarshal_object(
         recursive_swagger_spec,
         {'$ref': '#/definitions/Node'},
-        {'name': 'foo'})
-    assert result == {'name': 'foo', 'child': None}
+        {'name': 'foo'},
+    )
+    assert result == {'name': 'foo', 'date': None, 'child': None}
 
 
 def test_recursive_ref_with_depth_n(recursive_swagger_spec):
-    value = {
-        'name': 'foo',
-        'child': {
-            'name': 'bar',
-            'child': {
-                'name': 'baz'
-            }
-        }
-    }
     result = unmarshal_object(
         recursive_swagger_spec,
         {'$ref': '#/definitions/Node'},
-        value)
-
-    expected = {
+        {
+            'name': 'foo',
+            'date': '2019-05-01',
+            'child': {
+                'name': 'bar',
+                'date': '2019-05-02',
+                'child': {
+                    'name': 'baz',
+                },
+            },
+        },
+    )
+    assert result == {
         'name': 'foo',
+        'date': datetime.date(2019, 5, 1),
         'child': {
             'name': 'bar',
+            'date': datetime.date(2019, 5, 2),
             'child': {
                 'name': 'baz',
-                'child': None
-            }
-        }
+                'date': None,
+                'child': None,
+            },
+        },
     }
-    assert result == expected
 
 
 def nullable_spec_factory(required, nullable, property_type):
@@ -466,9 +472,9 @@ def test_non_nullable_none_value(empty_swagger_spec, property_type):
 
 @pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
 def test_non_required_none_value(empty_swagger_spec, property_type):
-    content_spec = nullable_spec_factory(required=False,
-                                         nullable=False,
-                                         property_type=property_type)
+    content_spec = nullable_spec_factory(
+        required=False, nullable=False, property_type=property_type,
+    )
     value = {'x': None}
     result = unmarshal_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}
@@ -497,4 +503,18 @@ def test_unmarshal_object_polymorphic_specs(polymorphic_spec):
         object_value=list_of_pets_dict,
     )
 
-    assert list_of_pets_dict == pet_list
+    assert pet_list == {
+        'number_of_pets': 2,
+        'list': [
+            {
+                'name': 'a dog name',
+                'type': 'Dog',
+                'birth_date': datetime.date(2017, 3, 9),
+            },
+            {
+                'name': 'a cat name',
+                'type': 'Cat',
+                'color': 'white',
+            },
+        ]
+    }

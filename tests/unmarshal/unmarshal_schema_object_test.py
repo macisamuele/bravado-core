@@ -53,12 +53,11 @@ def test_use_models_false(petstore_dict):
 
 
 def test_missing_object_spec(petstore_dict):
-    petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
-    category_spec = copy.deepcopy(
-        petstore_spec.spec_dict['definitions']['Category']
-    )
     # without a type, do no validation
-    category_spec['properties']['id'].pop('type')
+    spec_dict = copy.deepcopy(petstore_dict)
+    category_spec = spec_dict['definitions']['Category']
+    category_spec['properties']['id'] = {}
+    petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
 
     # so id can be a string...
     result = unmarshal_schema_object(
@@ -81,13 +80,12 @@ def test_missing_object_spec_defaulting_on(petstore_dict):
     """When default_type_to_object config option is set to True,
     then missing types default to object
     """
-    petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False, 'default_type_to_object': True})
-    category_spec = copy.deepcopy(
-        petstore_spec.spec_dict['definitions']['Category']
-    )
-
+    spec_dict = copy.deepcopy(petstore_dict)
+    category_spec = spec_dict['definitions']['Category']
     # now a missing type will default to object type
     category_spec['properties']['id'].pop('type')
+
+    petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False, 'default_type_to_object': True})
 
     result = unmarshal_schema_object(
         petstore_spec,
@@ -98,19 +96,18 @@ def test_missing_object_spec_defaulting_on(petstore_dict):
 
     # so a different type will fail
     with pytest.raises(SwaggerMappingError):
-        result = unmarshal_schema_object(
+        unmarshal_schema_object(
             petstore_spec,
             category_spec,
-            {'id': 'blahblah', 'name': 'short-hair'})
+            {'id': 'blahblah', 'name': 'short-hair'},
+        )
 
 
 def test_invalid_type(petstore_dict):
-    petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
-    category_spec = copy.deepcopy(
-        petstore_spec.spec_dict['definitions']['Category']
-    )
-
+    spec_dict = copy.deepcopy(petstore_dict)
+    category_spec = spec_dict['definitions']['Category']
     category_spec['properties']['id']['type'] = 'notAValidType'
+    petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
 
     with pytest.raises(SwaggerMappingError):
         unmarshal_schema_object(

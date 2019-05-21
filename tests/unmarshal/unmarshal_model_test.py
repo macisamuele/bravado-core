@@ -135,8 +135,17 @@ def test_value_is_not_dict_like_raises_error(petstore_dict):
 
 def test_nullable_object_properties(petstore_dict, pet_dict):
     pet_spec_dict = petstore_dict['definitions']['Pet']
+    petstore_dict['definitions']['NullableCategory'] = petstore_dict['definitions']['Category']
+    petstore_dict['definitions']['NullableCategory']['x-nullable'] = True
+    petstore_dict['definitions']['Category'] = {
+        'type': 'object',
+        'allOf': [
+            {'$ref': '#/definitions/NullableCategory'},
+            {'type': 'object'},
+        ],
+    }
     pet_spec_dict['required'].append('category')
-    pet_spec_dict['properties']['category']['x-nullable'] = True
+    pet_spec_dict['properties']['category'] = {'$ref': '#/definitions/NullableCategory'}
     petstore_spec = Spec.from_dict(petstore_dict)
     Pet = petstore_spec.definitions['Pet']
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
