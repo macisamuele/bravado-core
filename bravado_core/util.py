@@ -70,8 +70,13 @@ class lazy_class_attribute(object):
         return value
 
 
+class RecursiveCallException(Exception):
+    pass
+
+
 def memoize_by_id(func):
     cache = func.cache = {}
+    on_fly_cache = set()
     _CACHE_MISS = object()
 
     def make_key(*args, **kwargs):
@@ -82,7 +87,11 @@ def memoize_by_id(func):
         cache_key = make_key(*args, **kwargs)
         cached_value = cache.get(cache_key, _CACHE_MISS)
         if cached_value is _CACHE_MISS:
+            if cache_key in on_fly_cache:
+                raise RecursiveCallException()
+            on_fly_cache.add(cache_key)
             cached_value = func(*args, **kwargs)
+            on_fly_cache.remove(cache_key)
             cache[cache_key] = cached_value
         return cached_value
     return wrapper
