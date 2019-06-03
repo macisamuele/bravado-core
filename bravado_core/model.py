@@ -226,26 +226,32 @@ def _collect_models(container, json_reference, models, swagger_spec):
 
 
 class ModelMeta(abc.ABCMeta):
-    def __instancecheck__(self, instance):
+    def __instancecheck__(cls, instance):
         """
         An object is instance of a specific model class if:
         - model class and instance share the same model Swagger Specs
         - instance inherits from model class (in case of multiple inheritance, ie. allOff)
         """
-        if not isinstance(type(instance), type(self)):
+        if not isinstance(type(instance), type(cls)):
+            # If the type of the instance is not a subtype of self
+            # NOTE: running isinstance(a, b) is equivalent to ABCMeta.__instancecheck__(b, a)
             return False
 
-        if type(self) == ModelMeta:
-            # This is the base Model class
-            return True
+        if not issubclass(cls, Model):
+            # The check focus only on bravado_core.model.Model class
+            # if self is not a Model class, then fallback to the default
+            # __instancecheck__ implementation
+            return super(ModelMeta, cls).__instancecheck__(instance)
 
-        if not hasattr(instance, '_model_spec'):
-            return False
+        # At this point we have the guarantee that cls is a base class of instance
+        if cls is Model:
+            # An instance of Model class
+            return issubclass(type(instance), cls)
 
-        if self._model_spec == instance._model_spec:
-            return True
-
-        return self.__name__ in type(instance)._inherits_from
+        return (
+            cls._swagger_spec == instance._swagger_spec and
+            cls.__name__ in type(instance)._inherits_from
+        )
 
 
 @add_metaclass(ModelMeta)
