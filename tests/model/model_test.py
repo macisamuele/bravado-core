@@ -130,6 +130,16 @@ def test_model_deepcopy(user_type, user_kwargs):
     assert user._as_dict() == user_copy._as_dict()
 
 
+def test_model_deepcopy_with_additional_properties(user_type, user_kwargs):
+    user_kwargs['additionalProperty'] = 1
+    user = user_type(**user_kwargs)
+    user_copy = deepcopy(user)
+
+    assert isinstance(user_copy, user_type)
+    assert user == user_copy
+    assert user._as_dict() == user_copy._as_dict()
+
+
 @pytest.mark.parametrize(
     'recursive',
     [
