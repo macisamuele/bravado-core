@@ -19,21 +19,27 @@ repos:
         - -i
         - --ignore=E309,E501
 -   repo: https://gitlab.com/pycqa/flake8.git
-    rev: 3.7.7
+    rev: 3.7.8
     hooks:
     -   id: flake8
         exclude: ^docs
 -   repo: https://github.com/asottile/reorder_python_imports
-    rev: v1.4.0
+    rev: v1.6.1
     hooks:
     -   id: reorder-python-imports
+        exclude: ^(docs/.*|setup\.py)$
+        args:
+        - --add-import
+        - from __future__ import absolute_import
+        - --add-import
+        - from __future__ import unicode_literals
 -   repo: https://github.com/Yelp/detect-secrets
-    rev: v0.12.3
+    rev: v0.12.5
     hooks:
     -   id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
-        exclude: tests/.*
+        exclude: ^tests/.*
 -   repo: https://github.com/asottile/add-trailing-comma
-    rev: v1.0.0
+    rev: v1.4.1
     hooks:
     -   id: add-trailing-comma
