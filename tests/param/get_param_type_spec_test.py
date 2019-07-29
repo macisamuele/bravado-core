@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import pytest
 from mock import Mock
 
@@ -28,7 +31,7 @@ def test_location_is_body(empty_swagger_spec, body_param_spec):
 
 
 def test_location_is_not_body(empty_swagger_spec):
-    for location in ('path', 'query', 'header', 'formData',):
+    for location in ('path', 'query', 'header', 'formData'):
         param_spec = {
             'name': 'petId',
             'in': location,

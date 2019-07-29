@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 from bravado_core.response import IncomingResponse
 from bravado_core.response import unmarshal_response
 

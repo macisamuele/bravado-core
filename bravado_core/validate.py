@@ -4,6 +4,9 @@ Delegate as much validation as possible out to jsonschema. This module serves
 as the single point of entry for validations should we need to further
 customize the behavior.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import sys
 
 import jsonschema

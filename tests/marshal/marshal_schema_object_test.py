@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import copy
 import datetime
 from collections import defaultdict
@@ -95,7 +98,7 @@ def test_marshal_raises_SwaggerMappingError_if_SwaggerFormat_fails_during_to_wir
     message, wrapped_exception = excinfo.value.args
     assert message == 'Error while marshalling value={} to type=string/date.'.format(date_str)
     assert type(wrapped_exception) is AttributeError
-    assert wrapped_exception.args == ('\'str\' object has no attribute \'isoformat\'', )
+    assert wrapped_exception.args == ('\'str\' object has no attribute \'isoformat\'',)
 
 
 def test_allOf_with_ref(composition_spec):

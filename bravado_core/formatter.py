@@ -3,6 +3,9 @@
 Support for the 'format' key in the swagger spec as outlined in
 https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#dataTypeFormat
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import functools
 from collections import namedtuple
 

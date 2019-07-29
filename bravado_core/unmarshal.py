@@ -5,6 +5,9 @@ The module exposes unmarshaling capabilities.
 Unmarshaling is the operation that converts a "JSON" object into its python representation.
 The operation should also take care of converting types accordingly to the defined :class:`bravado_core.formatter.SwaggerFormat`s.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import warnings
 from functools import partial
 

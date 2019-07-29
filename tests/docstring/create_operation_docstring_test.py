@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 from bravado_core.docstring import create_operation_docstring
 from bravado_core.operation import Operation
 
